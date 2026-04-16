@@ -1,0 +1,18 @@
+{
+  "current": "派蒙",
+  "notify_mode": "api",
+  "voices": {
+    "派蒙": {
+      "name": "派蒙",
+      "model_id": "eacc56f8ab48443fa84421c547d3b60e"
+    },
+    "迪卢克": {
+      "name": "迪卢克",
+      "model_id": "fc5e808e1eb345ec9acdf0ff96105950"
+    },
+    "曹操": {
+      "name": "曹操",
+      "model_id": "f6f293aabfe24e46aff0fc309c233d31"
+    }
+  }
+}
