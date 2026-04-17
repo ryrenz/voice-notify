@@ -29,6 +29,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import config
 import audio
+import tts_local
 
 MAX_CONTEXT_CHARS = 1500
 
@@ -247,6 +248,29 @@ def main():
     if config.get_mute_file().exists():
         return
 
+    backend = config.get_backend()
+
+    # Local backend: zero-config system TTS (optionally LLM-enhanced)
+    if backend == "local":
+        local_cfg = config.get_local_config()
+        text = local_cfg.get("completion_text", "任务完成")
+
+        # If an LLM key is available, replace static text with a summary
+        _, llm_key, _ = config.get_llm_config()
+        if llm_key:
+            hook_input = read_hook_input()
+            raw_text = extract_last_turn(hook_input.get("transcript_path", ""))
+            if raw_text:
+                summary = summarize_with_llm(raw_text, "")
+                if summary:
+                    if summary[-1] not in "。！？!?.~～":
+                        summary += "。"
+                    text = summary
+
+        tts_local.local_tts(text, local_cfg.get("voice", "auto"))
+        return
+
+    # Fish backend: existing cache/api logic
     # Cache mode: play pre-generated audio, skip all API calls
     if config.get_notify_mode() == "cache":
         play_cached_notify()

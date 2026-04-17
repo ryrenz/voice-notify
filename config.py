@@ -15,10 +15,6 @@ from pathlib import Path
 
 INSTALL_DIR = Path.home() / ".claude" / "voice-notify"
 
-# Legacy key file paths (backward compat)
-_LEGACY_FISH_KEY = Path.home() / ".claude" / ".fish_api_key"
-_LEGACY_DEEPSEEK_KEY = Path.home() / ".claude" / ".deepseek_key"
-
 
 def _script_dir() -> Path:
     """Directory containing the currently running script."""
@@ -66,37 +62,14 @@ def get_api_key(name: str) -> str:
     Get an API key by name. Check order:
     1. Environment variable (e.g. FISH_API_KEY)
     2. .env file (loaded by load_env)
-    3. Legacy key files (~/.claude/.fish_api_key, ~/.claude/.deepseek_key)
     """
-    # load_env populates os.environ, so env var check covers both
     load_env()
-    key = os.environ.get(name, "")
-    if key:
-        return key
-
-    # Legacy key file fallback
-    legacy_map = {
-        "FISH_API_KEY": _LEGACY_FISH_KEY,
-        "DEEPSEEK_API_KEY": _LEGACY_DEEPSEEK_KEY,
-    }
-    legacy_file = legacy_map.get(name)
-    if legacy_file and legacy_file.exists():
-        try:
-            return legacy_file.read_text(encoding="utf-8").strip()
-        except OSError:
-            pass
-
-    return ""
+    return os.environ.get(name, "")
 
 
 def load_voice_config() -> dict:
     """Load voice config JSON. Returns the parsed dict or empty dict on failure."""
     config_file = _find_file("voices.json")
-    if not config_file:
-        # Also check legacy path
-        legacy = Path.home() / ".claude" / ".voice_config.json"
-        if legacy.exists():
-            config_file = legacy
     if not config_file:
         return {}
     try:
@@ -120,11 +93,38 @@ def save_voice_config(config: dict) -> None:
         print(f"config: failed to save voice config: {e}", file=sys.stderr)
 
 
-def get_current_voice() -> tuple[str | None, str]:
-    """Return (model_id, character_name) from config, or (None, '')."""
+def get_backend() -> str:
+    """Return 'local' (default) or 'fish'."""
     config = load_voice_config()
-    current = config.get("current", "")
-    voices = config.get("voices", {})
+    backend = config.get("backend", "local")
+    if backend not in ("local", "fish"):
+        return "local"
+    return backend
+
+
+def get_local_config() -> dict:
+    """Return the local backend sub-config with sane defaults."""
+    config = load_voice_config()
+    local = config.get("local", {}) if isinstance(config.get("local"), dict) else {}
+    return {
+        "voice": local.get("voice", "auto"),
+        "completion_text": local.get("completion_text", "任务完成"),
+        "permission_text": local.get("permission_text", "需要你的确认"),
+    }
+
+
+def get_fish_config() -> dict:
+    """Return the fish backend sub-config (raw dict, may be empty)."""
+    config = load_voice_config()
+    fish = config.get("fish", {})
+    return fish if isinstance(fish, dict) else {}
+
+
+def get_current_voice() -> tuple[str | None, str]:
+    """Return (model_id, character_name) from fish sub-config, or (None, '')."""
+    fish = get_fish_config()
+    current = fish.get("current", "")
+    voices = fish.get("voices", {})
     if current and current in voices:
         voice = voices[current]
         model_id = voice.get("model_id", "")
@@ -135,9 +135,12 @@ def get_current_voice() -> tuple[str | None, str]:
 
 
 def get_notify_mode() -> str:
-    """Return 'cache' or 'api' (default) from voice config."""
-    config = load_voice_config()
-    return config.get("notify_mode", "api")
+    """Return 'cache' or 'api' (default) from fish sub-config."""
+    fish = get_fish_config()
+    mode = fish.get("notify_mode", "api")
+    if mode not in ("cache", "api"):
+        return "api"
+    return mode
 
 
 def get_cache_dir() -> Path:

@@ -1,141 +1,151 @@
 # voice-notify
 
-AI character voice notifications for Claude Code — announces task completion and permission requests.
+Voice notifications for Claude Code — announces task completion and permission requests.
 
-When a task finishes, an LLM summarizes the last conversation turn into one sentence, then Fish Audio TTS speaks it in your chosen character's voice. Permission requests play a cached character-specific prompt.
-
-## Features
-
-- **Task completion announcements** — real-time LLM summary + TTS (API mode) or pre-generated cached audio (Cache mode)
-- **Permission request alerts** — auto-cached character voice prompts, no repeated API calls
-- **13 built-in characters** — Paimon, Diluc, Zhongli, Yae Miko, Cao Cao, Crayon Shin-chan, and more, each with unique personality and lines
-
-## Quick Start
+## Quick start (30 seconds, zero config)
 
 ```bash
-# 1. Clone
 git clone https://github.com/ryrenz/voice-notify.git
 cd voice-notify
-
-# 2. Install
-chmod +x install.sh && ./install.sh
-
-# 3. Add API keys
-nano ~/.claude/voice-notify/.env
-# Fill in FISH_API_KEY and DEEPSEEK_API_KEY
-
-# 4. Add hooks (follow install.sh output)
-claude /hooks
-# Stop hook: python3 ~/.claude/voice-notify/voice_notify.py
-# Notification hook: python3 ~/.claude/voice-notify/voice_permission.py
+./install.sh
 ```
 
-Done! You'll hear character voice notifications whenever Claude Code completes a task or requests permission.
-
-## Configuration
-
-### API Keys
-
-Edit `~/.claude/voice-notify/.env`:
-
-```bash
-# Required: Fish Audio TTS
-FISH_API_KEY=your_key_here
-
-# Required for API mode: DeepSeek (for conversation summarization)
-DEEPSEEK_API_KEY=your_key_here
-
-# Optional: Use any OpenAI-compatible API instead of DeepSeek
-# LLM_API_URL=https://api.openai.com/v1/chat/completions
-# LLM_API_KEY=your_key
-# LLM_MODEL=gpt-4o-mini
-```
-
-### Switch Character
-
-Edit `~/.claude/voice-notify/voices.json`, change the `"current"` field:
+Then paste this into the `hooks` section of `~/.claude/settings.json`:
 
 ```json
 {
-  "current": "曹操",
-  "voices": { ... }
-}
-```
-
-### Switch Mode
-
-```bash
-python3 ~/.claude/voice-notify/voice_mode.py cache  # Cache mode (offline, low latency)
-python3 ~/.claude/voice-notify/voice_mode.py api    # API mode (real-time summary, more natural)
-python3 ~/.claude/voice-notify/voice_mode.py        # Show current mode
-```
-
-### Generate Cache
-
-Cache mode requires pre-generated audio. Each character takes ~15 seconds:
-
-```bash
-python3 ~/.claude/voice-notify/generate_cache.py                     # All characters
-python3 ~/.claude/voice-notify/generate_cache.py --character 派蒙     # Single character
-python3 ~/.claude/voice-notify/generate_cache.py --dry-run           # Preview only
-python3 ~/.claude/voice-notify/generate_cache.py --force             # Force regenerate
-```
-
-## Adding Custom Characters
-
-1. Find a voice model on [Fish Audio](https://fish.audio), copy its model_id
-
-2. Add to `voices.json`:
-```json
-{
-  "current": "YourCharacter",
-  "voices": {
-    "YourCharacter": {
-      "name": "YourCharacter",
-      "model_id": "model_id_from_fish_audio"
-    }
-  }
-}
-```
-
-3. Add character lines to `characters.json` (optional, needed for Cache mode):
-```json
-{
-  "YourCharacter": {
-    "permission_prompt": "What to say on permission requests",
-    "completion_lines": [
-      "Task done line 1",
-      "Task done line 2"
+  "hooks": {
+    "Stop": [
+      {"hooks": [{"type": "command", "command": "python3 ~/.claude/voice-notify/voice_notify.py"}]}
+    ],
+    "Notification": [
+      {"hooks": [{"type": "command", "command": "python3 ~/.claude/voice-notify/voice_permission.py"}]}
     ]
   }
 }
 ```
 
-4. Generate cache if using Cache mode:
+Done. Every time Claude Code finishes a task it says "任务完成" (task done); on permission requests it says "需要你的确认" (needs your confirmation), using your system's built-in TTS voice.
+
+## Upgrade: anime character voices (Fish Audio)
+
+Tired of the default system voice? Upgrade to Fish Audio TTS and get Paimon, Diluc, Cao Cao and other character voices.
+
+### Steps
+
+**1. Register a Fish Audio account**
+
+Sign up at https://fish.audio, grab your API key from the settings page.
+
+**2. Find a voice model_id you like**
+
+- Visit https://fish.audio/text-to-speech/?modality=tts
+- Search for a character (e.g. "派蒙", "Diluc", "曹操")
+- Open the model page — the last path segment in the URL is the `model_id`
+  - Example: `https://fish.audio/m/eacc56f8ab48443fa84421c547d3b60e/` → model_id = `eacc56f8ab48443fa84421c547d3b60e`
+
+**3. Configure the API key**
+
+Edit `~/.claude/voice-notify/.env`:
 ```bash
-python3 ~/.claude/voice-notify/generate_cache.py --character YourCharacter
+FISH_API_KEY=your_fish_audio_key_here
 ```
 
-## How It Works
+**4. Switch to Fish Audio backend**
 
+```bash
+python3 ~/.claude/voice-notify/voice_mode.py fish
 ```
-Claude Code task complete (Stop hook)
-  │
-  ├─ Cache mode → pick random pre-generated audio → play
-  │
-  └─ API mode → read transcript → LLM summarize → Fish Audio TTS → play
 
-Claude Code permission request (Notification hook)
-  │
-  └─ check cache → generate & cache if missing → play character prompt
+**5. (Optional) Add custom characters**
+
+Edit `~/.claude/voice-notify/voices.json`:
+```json
+{
+  "backend": "fish",
+  "fish": {
+    "current": "YourCharacter",
+    "voices": {
+      "YourCharacter": {
+        "name": "YourCharacter",
+        "model_id": "model_id_from_fish_audio"
+      }
+    }
+  }
+}
+```
+
+### Two Fish Audio sub-modes
+
+```bash
+python3 ~/.claude/voice-notify/voice_mode.py fish api    # Real-time: LLM summary + TTS (needs DEEPSEEK_API_KEY)
+python3 ~/.claude/voice-notify/voice_mode.py fish cache  # Cache: random pick from 10 pre-generated clips
+```
+
+Cache mode needs a one-time cache generation:
+```bash
+python3 ~/.claude/voice-notify/generate_cache.py --character 派蒙
+```
+
+## Configuration
+
+### Local mode voice and text
+
+Edit the `local` section of `voices.json`:
+```json
+{
+  "local": {
+    "voice": "Tingting",
+    "completion_text": "任务完成",
+    "permission_text": "需要你的确认"
+  }
+}
+```
+
+macOS Chinese voices: `Tingting` (Mandarin female), `Sinji` (Cantonese), `Meijia` (Taiwan).
+List all voices: `say -v '?'`.
+
+### Show current mode
+
+```bash
+python3 ~/.claude/voice-notify/voice_mode.py
+```
+
+### Temporary mute
+```bash
+touch ~/.claude/voice-notify/.voice_mute     # mute
+rm ~/.claude/voice-notify/.voice_mute        # unmute
 ```
 
 ## Requirements
 
 - Python 3.9+
-- macOS (afplay) or Linux (paplay / aplay / mpv)
-- curl
-- No pip dependencies
+- macOS or Linux
+  - macOS: ships with `say` (zero deps)
+  - Linux: install `speech-dispatcher` or `espeak`
+- curl (only needed for Fish Audio mode)
+
+## FAQ
+
+**Q: Really works with zero API keys?**
+
+Yes. The default `local` backend uses system TTS — built into macOS, one `apt install` away on Linux.
+
+**Q: Is Fish Audio free?**
+
+New Fish Audio accounts get some credits. Heavy use is billed per character.
+
+**Q: Can I use OpenAI instead of DeepSeek for summarization?**
+
+Yes. Set `LLM_API_URL`, `LLM_API_KEY`, `LLM_MODEL` in `.env` — any OpenAI-compatible endpoint works.
+
+**Q: Can local mode use LLM summarization too?**
+
+Yes. If `DEEPSEEK_API_KEY` or `LLM_API_KEY` is set in `.env`, local mode replaces the static text with a one-sentence summary of Claude's last turn, then reads it through the system TTS.
+
+**Q: Why do I have to add the Claude Code hook by hand?**
+
+Auto-patching `settings.json` is risky (easy to corrupt existing config). Pasting a few JSON lines is safer.
 
 ## Uninstall
 
@@ -143,27 +153,6 @@ Claude Code permission request (Notification hook)
 chmod +x uninstall.sh && ./uninstall.sh
 # Then remove hooks from Claude Code
 ```
-
-## FAQ
-
-**Q: Are both API keys required?**
-
-Cache mode only needs FISH_API_KEY (used once to generate cache). API mode needs both.
-
-**Q: Can I use OpenAI or another LLM instead of DeepSeek?**
-
-Yes. Set `LLM_API_URL`, `LLM_API_KEY`, and `LLM_MODEL` in .env. Any OpenAI-compatible endpoint works.
-
-**Q: How do I mute temporarily?**
-
-```bash
-touch ~/.claude/voice-notify/.voice_mute   # Mute
-rm ~/.claude/voice-notify/.voice_mute      # Unmute
-```
-
-**Q: Windows support?**
-
-v1 supports macOS and Linux only.
 
 ## License
 

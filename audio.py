@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import fcntl
 import os
+import shutil
 import signal
 import subprocess
 import sys
@@ -27,16 +28,10 @@ def _detect_player() -> list[str]:
 
     # Linux: try paplay (PulseAudio), then aplay (ALSA), then mpv
     for cmd in ("paplay", "aplay", "mpv"):
-        try:
-            subprocess.run(
-                ["which", cmd],
-                capture_output=True, timeout=5
-            )
+        if shutil.which(cmd):
             if cmd == "mpv":
                 return ["mpv", "--no-video", "--really-quiet"]
             return [cmd]
-        except (subprocess.TimeoutExpired, FileNotFoundError):
-            continue
 
     print("audio: no audio player found (need afplay, paplay, aplay, or mpv)",
           file=sys.stderr)

@@ -31,9 +31,9 @@ import config
 
 
 def load_voice_map() -> dict[str, str]:
-    """Load voice config and return {character_name: model_id} map."""
-    voice_config = config.load_voice_config()
-    voices = voice_config.get("voices", {})
+    """Load fish sub-config and return {character_name: model_id} map."""
+    fish = config.get_fish_config()
+    voices = fish.get("voices", {})
     result = {}
     for key, voice in voices.items():
         model_id = voice.get("model_id", "")

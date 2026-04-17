@@ -2,7 +2,7 @@
 # install.sh — Install voice-notify for Claude Code.
 #
 # Creates ~/.claude/voice-notify/, copies scripts, and prints hook config.
-# Does NOT modify Claude Code settings — you add hooks manually.
+# Default mode is local TTS — no API key required.
 
 set -e
 
@@ -36,12 +36,27 @@ if [ "$PY_MAJOR" -lt 3 ] || ([ "$PY_MAJOR" -eq 3 ] && [ "$PY_MINOR" -lt 9 ]); th
 fi
 echo -e "${GREEN}✓${NC} Python $PY_VERSION"
 
-# 2. Check audio player
+# 2. Check TTS availability (local backend)
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    if command -v say &> /dev/null; then
+        echo -e "${GREEN}✓${NC} TTS: say (macOS)"
+    else
+        echo -e "${YELLOW}!${NC} say not found (unusual on macOS)"
+    fi
+elif [[ "$OSTYPE" == "linux"* ]]; then
+    if command -v spd-say &> /dev/null; then
+        echo -e "${GREEN}✓${NC} TTS: spd-say"
+    elif command -v espeak &> /dev/null; then
+        echo -e "${GREEN}✓${NC} TTS: espeak"
+    else
+        echo -e "${YELLOW}!${NC} No Linux TTS found. Install: sudo apt install speech-dispatcher espeak"
+    fi
+fi
+
+# 3. Check audio player (Fish backend, optional)
 if [[ "$OSTYPE" == "darwin"* ]]; then
     if command -v afplay &> /dev/null; then
-        echo -e "${GREEN}✓${NC} Audio: afplay (macOS)"
-    else
-        echo "Warning: afplay not found" >&2
+        echo -e "${GREEN}✓${NC} Audio player: afplay"
     fi
 elif [[ "$OSTYPE" == "linux"* ]]; then
     PLAYER=""
@@ -52,18 +67,16 @@ elif [[ "$OSTYPE" == "linux"* ]]; then
         fi
     done
     if [ -n "$PLAYER" ]; then
-        echo -e "${GREEN}✓${NC} Audio: $PLAYER (Linux)"
-    else
-        echo "Warning: no audio player found. Install pulseaudio, alsa-utils, or mpv." >&2
+        echo -e "${GREEN}✓${NC} Audio player: $PLAYER (needed for Fish Audio mode)"
     fi
 fi
 
-# 3. Create install directory
+# 4. Create install directory
 mkdir -p "$INSTALL_DIR"
 echo -e "${GREEN}✓${NC} Install dir: $INSTALL_DIR"
 
-# 4. Copy Python files and characters.json
-for file in config.py audio.py voice_notify.py voice_permission.py generate_cache.py voice_mode.py characters.json; do
+# 5. Copy Python files and characters.json
+for file in config.py audio.py tts_local.py voice_notify.py voice_permission.py generate_cache.py voice_mode.py characters.json; do
     if [ -f "$SCRIPT_DIR/$file" ]; then
         cp "$SCRIPT_DIR/$file" "$INSTALL_DIR/$file"
     else
@@ -72,51 +85,39 @@ for file in config.py audio.py voice_notify.py voice_permission.py generate_cach
 done
 echo -e "${GREEN}✓${NC} Scripts copied"
 
-# 5. Set up .env
-if [ ! -f "$INSTALL_DIR/.env" ]; then
-    cp "$SCRIPT_DIR/.env.example" "$INSTALL_DIR/.env"
-    echo -e "${YELLOW}!${NC} Created $INSTALL_DIR/.env — please edit it to add your API keys"
-    echo ""
-    echo "  Required keys:"
-    echo "    FISH_API_KEY    — Get from https://fish.audio"
-    echo "    DEEPSEEK_API_KEY — Get from https://platform.deepseek.com (API mode only)"
-    echo ""
-else
-    echo -e "${GREEN}✓${NC} .env already exists (not overwritten)"
-fi
-
 # 6. Set up voices.json
 if [ ! -f "$INSTALL_DIR/voices.json" ]; then
     cp "$SCRIPT_DIR/voices.example.json" "$INSTALL_DIR/voices.json"
-    echo -e "${GREEN}✓${NC} Default voice config created (派蒙, 迪卢克, 曹操)"
+    echo -e "${GREEN}✓${NC} Default voice config created (backend: local)"
 else
     echo -e "${GREEN}✓${NC} voices.json already exists (not overwritten)"
 fi
 
-# 7. Print hook configuration
-echo ""
-echo "========================"
-echo -e "${CYAN}Almost done! Add these hooks to Claude Code:${NC}"
-echo ""
-echo "  Stop hook (task completion voice):"
-echo -e "    ${GREEN}python3 $INSTALL_DIR/voice_notify.py${NC}"
-echo ""
-echo "  Notification hook (permission request voice):"
-echo -e "    ${GREEN}python3 $INSTALL_DIR/voice_permission.py${NC}"
-echo ""
-echo "  Run 'claude /hooks' to add them, or edit ~/.claude/settings.json"
-echo ""
-
-# 8. Optional: generate cache
-echo -e "Generate voice cache now? This pre-generates audio clips for offline use."
-echo -e "Requires FISH_API_KEY in .env. Each character takes ~15 seconds."
-read -p "Generate cache? [y/N] " -n 1 -r
-echo ""
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-    $PYTHON "$INSTALL_DIR/generate_cache.py"
+# 7. Set up .env (optional)
+if [ ! -f "$INSTALL_DIR/.env" ]; then
+    cp "$SCRIPT_DIR/.env.example" "$INSTALL_DIR/.env"
+    echo -e "${GREEN}✓${NC} .env template created (optional — only for Fish Audio upgrade)"
 else
-    echo "Skipped. Run later with: python3 $INSTALL_DIR/generate_cache.py"
+    echo -e "${GREEN}✓${NC} .env already exists (not overwritten)"
 fi
 
+# 8. Print hook configuration
+echo ""
+echo "========================"
+echo -e "${CYAN}Almost done! Add these hooks to ~/.claude/settings.json:${NC}"
+echo ""
+cat <<'EOF'
+  "hooks": {
+    "Stop": [
+      {"hooks": [{"type": "command", "command": "python3 ~/.claude/voice-notify/voice_notify.py"}]}
+    ],
+    "Notification": [
+      {"hooks": [{"type": "command", "command": "python3 ~/.claude/voice-notify/voice_permission.py"}]}
+    ]
+  }
+EOF
+echo ""
+echo -e "Default mode is ${GREEN}local TTS${NC} — no API key required."
+echo "To upgrade to Fish Audio character voices: see README.md"
 echo ""
 echo -e "${GREEN}Installation complete!${NC}"

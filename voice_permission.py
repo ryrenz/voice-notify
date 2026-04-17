@@ -25,6 +25,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import config
 import audio
+import tts_local
 
 DEFAULT_PROMPT = "需要你的确认。"
 
@@ -90,6 +91,16 @@ def main():
     if config.get_mute_file().exists():
         return
 
+    backend = config.get_backend()
+
+    # Local backend: zero-config system TTS
+    if backend == "local":
+        local_cfg = config.get_local_config()
+        text = local_cfg.get("permission_text", "需要你的确认")
+        tts_local.local_tts(text, local_cfg.get("voice", "auto"))
+        return
+
+    # Fish backend: cached permission audio
     model_id, character = config.get_current_voice()
     if not model_id:
         print("voice_permission: no voice configured", file=sys.stderr)
@@ -109,13 +120,8 @@ def main():
         if not generate_audio(model_id, prompt, cached_file, api_key):
             return
 
-    try:
-        subprocess.run(
-            audio._detect_player() + [str(cached_file)],
-            timeout=10,
-        )
-    except (subprocess.TimeoutExpired, FileNotFoundError, OSError) as e:
-        print(f"voice_permission: playback error: {e}", file=sys.stderr)
+    # Fire-and-forget playback so the Notification hook returns immediately
+    audio.play_audio_fire_and_forget(str(cached_file))
 
 
 if __name__ == "__main__":
