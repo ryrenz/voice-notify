@@ -8,7 +8,7 @@ Generates 10 audio files per character using Fish Audio TTS, stored in:
 Usage:
   python3 generate_cache.py                    # Generate all (skip existing)
   python3 generate_cache.py --dry-run          # Print plan only
-  python3 generate_cache.py --character 蜡笔小新  # Single character
+  python3 generate_cache.py --character 萝莉音   # Single voice profile
   python3 generate_cache.py --force            # Regenerate even if exists
   python3 generate_cache.py --delay 2          # Seconds between API calls
 """

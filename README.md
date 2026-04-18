@@ -27,13 +27,13 @@ cd voice-notify
 
 **完成！** 现在 Claude Code 每次完成任务会说“任务完成”，请求权限会说“需要你的确认”，用 macOS `say` / Linux `espeak` 的系统声音。
 
-想换成更自然的角色声音（派蒙、迪卢克等），看下面 [Fish Audio 升级](#升级fish-audio-角色语音)。
+想换成更有特色的角色声线（御姐、正太、霸总等），看下面 [Fish Audio 升级](#升级fish-audio-角色语音)。
 
 ---
 
 ## 升级：Fish Audio 角色语音
 
-系统 TTS 声音太呆板？升级到 Fish Audio，用二次元角色的声音播报。
+系统 TTS 声音太呆板？升级到 Fish Audio，**内置 13 种声线**（萝莉音 / 御姐音 / 正太音 / 霸总音 / 绿茶音 / 社会人音 等），想要哪种就挑哪种。
 
 ### 1. 注册 Fish Audio 账号
 
@@ -41,11 +41,11 @@ cd voice-notify
 
 **获取 API Key**：登录后 → 右上角头像 → API Keys → Create → 复制保存。
 
-### 2. 找到你想要的角色 Model ID
+### 2. 找到你想要的声线 Model ID
 
-前往 https://fish.audio/discovery/ 搜索角色：
+前往 https://fish.audio/discovery/ 搜索符合你想要声线的模型：
 
-- 搜索“派蒙”、“迪卢克”、“曹操”等名字
+- 按声线类型搜索，例如“萝莉”、“御姐”、“正太”、“霸总”等
 - 点进模型详情页
 - URL 里最后一段就是 `model_id`
   - 例：`https://fish.audio/m/eacc56f8ab48443fa84421c547d3b60e/` → `eacc56f8ab48443fa84421c547d3b60e`
@@ -59,16 +59,16 @@ cd voice-notify
 FISH_API_KEY=你从 Fish Audio 复制的 key
 ```
 
-**添加角色** —— 编辑 `~/.claude/voice-notify/voices.json`：
+**添加声线** —— 编辑 `~/.claude/voice-notify/voices.json`（key 对应 `characters.json` 里的声线名，需保持一致）：
 
 ```json
 {
   "backend": "fish",
   "fish": {
-    "current": "派蒙",
+    "current": "萝莉音",
     "voices": {
-      "派蒙": {
-        "name": "派蒙",
+      "萝莉音": {
+        "name": "萝莉音",
         "model_id": "从 Fish Audio 复制的 model_id"
       }
     }
@@ -82,7 +82,7 @@ FISH_API_KEY=你从 Fish Audio 复制的 key
 python3 ~/.claude/voice-notify/voice_mode.py fish
 ```
 
-搞定！下次 Claude Code 完成任务就是派蒙的声音了。
+搞定！下次 Claude Code 完成任务就是萝莉音的声音了。
 
 ### 4. Fish Audio 两种子模式
 
@@ -95,10 +95,10 @@ python3 ~/.claude/voice-notify/voice_mode.py fish cache  # 缓存模式：预生
 - **cache 模式**台词来自 `characters.json`，先生成缓存：
 
   ```bash
-  python3 ~/.claude/voice-notify/generate_cache.py --character 派蒙
+  python3 ~/.claude/voice-notify/generate_cache.py --character 萝莉音
   ```
 
-  `characters.json` 内置 13 个角色的台词（派蒙 / 迪卢克 / 钟离 / 神子 / 曹操 / 长离 / 姬子 / 蜡笔小新 / 派大星 / 奶龙 / 绿茶 / 丁真 / 黑手）。它只是一份台词库，**不包含任何 model_id**，你需要自己去 Fish Audio 找对应角色的 model_id 填到 `voices.json`。
+  `characters.json` 内置 13 种声线模板（萝莉音 / 御姐音 / 正太音 / 霸总音 / 冷酷男声 / 古风男声 / 温柔姐姐音 / 知性姐姐音 / 呆萌音 / 萌宝音 / 绿茶音 / 少年音 / 社会人音），每种配了 10 条代表性台词。它只是一份台词库，**不包含任何 model_id**，你需要自己去 Fish Audio 找符合该声线的模型，把 `model_id` 填到 `voices.json`。
 
 ---
 
@@ -193,8 +193,8 @@ Claude Code 事件触发
 **Q: Fish Audio 收费吗？**
 注册送免费额度，重度使用按字符数付费，详见 fish.audio 定价。
 
-**Q: `characters.json` 里 13 个角色的 model_id 呢？**
-仓库里不分发 model_id —— 请自己去 https://fish.audio/discovery/ 搜索对应角色名，复制 ID 粘到 `voices.json`。
+**Q: `characters.json` 里 13 种声线的 model_id 呢？**
+仓库里不分发 model_id —— 请自己去 https://fish.audio/discovery/ 按声线类型挑一个顺耳的模型，复制 ID 粘到 `voices.json`。
 
 **Q: 能用 OpenAI 代替 DeepSeek 吗？**
 可以。在 `.env` 里设置 `LLM_API_URL` / `LLM_API_KEY` / `LLM_MODEL`，支持任何 OpenAI 兼容 API。
