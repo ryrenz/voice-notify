@@ -250,6 +250,13 @@ def main():
 
     backend = config.get_backend()
 
+    # If fish is selected but not fully configured, silently fall back to
+    # local TTS so the user always hears something.
+    if backend == "fish":
+        model_id, _ = config.get_current_voice()
+        if not model_id or not config.get_api_key("FISH_API_KEY"):
+            backend = "local"
+
     # Local backend: zero-config system TTS (optionally LLM-enhanced)
     if backend == "local":
         local_cfg = config.get_local_config()

@@ -49,7 +49,9 @@ elif [[ "$OSTYPE" == "linux"* ]]; then
     elif command -v espeak &> /dev/null; then
         echo -e "${GREEN}✓${NC} TTS: espeak"
     else
-        echo -e "${YELLOW}!${NC} No Linux TTS found. Install: sudo apt install speech-dispatcher espeak"
+        echo -e "${YELLOW}!${NC} No Linux TTS found. Install one of:"
+        echo "    sudo apt install speech-dispatcher   # recommended (supports Chinese)"
+        echo "    sudo apt install espeak"
     fi
 fi
 

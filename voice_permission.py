@@ -87,23 +87,35 @@ def generate_audio(model_id: str, text: str, output_path: Path, api_key: str) ->
             pass
 
 
+def _speak_local_permission() -> None:
+    """Fallback path: system TTS for the permission prompt."""
+    local_cfg = config.get_local_config()
+    text = local_cfg.get("permission_text", "需要你的确认")
+    tts_local.local_tts(text, local_cfg.get("voice", "auto"))
+
+
 def main():
     if config.get_mute_file().exists():
         return
 
     backend = config.get_backend()
 
+    # If fish is selected but not fully configured, silently fall back to
+    # local TTS so the user always hears something.
+    if backend == "fish":
+        model_id, _ = config.get_current_voice()
+        if not model_id or not config.get_api_key("FISH_API_KEY"):
+            backend = "local"
+
     # Local backend: zero-config system TTS
     if backend == "local":
-        local_cfg = config.get_local_config()
-        text = local_cfg.get("permission_text", "需要你的确认")
-        tts_local.local_tts(text, local_cfg.get("voice", "auto"))
+        _speak_local_permission()
         return
 
     # Fish backend: cached permission audio
     model_id, character = config.get_current_voice()
     if not model_id:
-        print("voice_permission: no voice configured", file=sys.stderr)
+        _speak_local_permission()
         return
 
     prompt = load_permission_prompt(character)
@@ -115,9 +127,10 @@ def main():
     if not cached_file.exists():
         api_key = config.get_api_key("FISH_API_KEY")
         if not api_key:
-            print("voice_permission: FISH_API_KEY not set", file=sys.stderr)
+            _speak_local_permission()
             return
         if not generate_audio(model_id, prompt, cached_file, api_key):
+            _speak_local_permission()
             return
 
     # Fire-and-forget playback so the Notification hook returns immediately

@@ -23,6 +23,31 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import config
 
 
+FISH_SETUP_HINT = """\
+Next steps:
+  1. Get a Fish Audio API key: https://fish.audio (Account -> API Keys)
+  2. Find voice model IDs at: https://fish.audio/discovery/
+  3. Add them to ~/.claude/voice-notify/voices.json under the "fish.voices" section
+  4. Set FISH_API_KEY in ~/.claude/voice-notify/.env
+
+See README.md -> "Fish Audio Setup" for detailed steps.
+"""
+
+
+def _fish_has_voices(voice_config: dict) -> bool:
+    """Return True if fish.voices has at least one entry with a model_id."""
+    fish = voice_config.get("fish", {})
+    if not isinstance(fish, dict):
+        return False
+    voices = fish.get("voices", {})
+    if not isinstance(voices, dict) or not voices:
+        return False
+    for voice in voices.values():
+        if isinstance(voice, dict) and voice.get("model_id"):
+            return True
+    return False
+
+
 def _load_or_seed() -> dict:
     """Load voices.json, seeding from voices.example.json if missing."""
     cfg = config.load_voice_config()
@@ -97,6 +122,13 @@ def main():
     if target == "fish":
         notify_mode = voice_config.get("fish", {}).get("notify_mode", "api")
         print(f"Backend set to: fish ({notify_mode} mode)")
+
+        # Warn if no voices are configured — common on first switch
+        if not _fish_has_voices(voice_config):
+            print()
+            print("Switched to fish backend, but no voices are configured yet.")
+            print()
+            print(FISH_SETUP_HINT, end="")
     else:
         print("Backend set to: local")
 

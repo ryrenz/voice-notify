@@ -1,6 +1,6 @@
 # voice-notify
 
-让 Claude Code 用语音播报任务完成和权限请求。
+让 Claude Code 用语音播报任务完成和权限请求。默认使用系统自带 TTS，**开箱即用，不需要任何 API Key**。
 
 ## 快速开始（30 秒零配置）
 
@@ -10,7 +10,7 @@ cd voice-notify
 ./install.sh
 ```
 
-然后把下面这段加到 `~/.claude/settings.json` 的 hooks：
+然后把下面这段加到 `~/.claude/settings.json` 的顶层（和现有 `hooks` 合并，或新建）：
 
 ```json
 {
@@ -25,74 +25,89 @@ cd voice-notify
 }
 ```
 
-完成。每次 Claude Code 完成任务会说"任务完成"，请求权限会说"需要你的确认"，用系统自带的声音。
+**完成！** 现在 Claude Code 每次完成任务会说“任务完成”，请求权限会说“需要你的确认”，用 macOS `say` / Linux `espeak` 的系统声音。
 
-## 进阶：换成二次元角色语音（Fish Audio）
+想换成更自然的角色声音（派蒙、迪卢克等），看下面 [Fish Audio 升级](#升级fish-audio-角色语音)。
 
-系统声音太死板？可以升级到 Fish Audio TTS，用派蒙、迪卢克、曹操等角色的声音播报。
+---
 
-### 步骤
+## 升级：Fish Audio 角色语音
 
-**1. 注册 Fish Audio 账号**
+系统 TTS 声音太呆板？升级到 Fish Audio，用二次元角色的声音播报。
 
-去 https://fish.audio 注册账号，在设置页找到 API Key，复制保存。
+### 1. 注册 Fish Audio 账号
 
-**2. 找到你喜欢的角色模型 ID**
+前往 https://fish.audio 注册账号。
 
-- 访问 https://fish.audio/zh-CN/text-to-speech/?modality=tts
-- 搜索角色名（比如"派蒙"、"迪卢克"、"曹操"）
-- 点进模型页面，URL 里的最后一段就是 `model_id`
-  - 例如：`https://fish.audio/zh-CN/m/eacc56f8ab48443fa84421c547d3b60e/` → model_id = `eacc56f8ab48443fa84421c547d3b60e`
-- 复制 model_id
+**获取 API Key**：登录后 → 右上角头像 → API Keys → Create → 复制保存。
 
-**3. 配置 API Key**
+### 2. 找到你想要的角色 Model ID
 
-编辑 `~/.claude/voice-notify/.env`：
-```bash
-FISH_API_KEY=your_fish_audio_key_here
+前往 https://fish.audio/discovery/ 搜索角色：
+
+- 搜索“派蒙”、“迪卢克”、“曹操”等名字
+- 点进模型详情页
+- URL 里最后一段就是 `model_id`
+  - 例：`https://fish.audio/m/eacc56f8ab48443fa84421c547d3b60e/` → `eacc56f8ab48443fa84421c547d3b60e`
+- 点试听，满意就复制 `model_id`
+
+### 3. 配置
+
+**填 API Key** —— 编辑 `~/.claude/voice-notify/.env`：
+
+```
+FISH_API_KEY=你从 Fish Audio 复制的 key
 ```
 
-**4. 切换到 Fish Audio 模式**
+**添加角色** —— 编辑 `~/.claude/voice-notify/voices.json`：
 
-```bash
-python3 ~/.claude/voice-notify/voice_mode.py fish
-```
-
-**5.（可选）添加自定义角色**
-
-编辑 `~/.claude/voice-notify/voices.json`：
 ```json
 {
   "backend": "fish",
   "fish": {
-    "current": "你的角色名",
+    "current": "派蒙",
     "voices": {
-      "你的角色名": {
-        "name": "你的角色名",
-        "model_id": "从 Fish Audio 复制的 ID"
+      "派蒙": {
+        "name": "派蒙",
+        "model_id": "从 Fish Audio 复制的 model_id"
       }
     }
   }
 }
 ```
 
-### Fish Audio 两种子模式
+**切换到 Fish 模式**：
 
 ```bash
-python3 ~/.claude/voice-notify/voice_mode.py fish api    # 实时模式：LLM 总结 + TTS（需要额外的 DEEPSEEK_API_KEY）
-python3 ~/.claude/voice-notify/voice_mode.py fish cache  # 缓存模式：预生成 10 条台词随机播放
+python3 ~/.claude/voice-notify/voice_mode.py fish
 ```
 
-Cache 模式需要先生成缓存：
+搞定！下次 Claude Code 完成任务就是派蒙的声音了。
+
+### 4. Fish Audio 两种子模式
+
 ```bash
-python3 ~/.claude/voice-notify/generate_cache.py --character 派蒙
+python3 ~/.claude/voice-notify/voice_mode.py fish api    # 实时模式：LLM 总结刚做了什么 → Fish TTS 念出来
+python3 ~/.claude/voice-notify/voice_mode.py fish cache  # 缓存模式：预生成 10 条固定台词，随机播放
 ```
 
-## 配置
+- **api 模式**额外需要 DeepSeek 或 OpenAI API Key（在 `.env` 里填 `DEEPSEEK_API_KEY`，或 `LLM_API_URL` + `LLM_API_KEY` + `LLM_MODEL`）。
+- **cache 模式**台词来自 `characters.json`，先生成缓存：
 
-### 本地模式的声音和文本
+  ```bash
+  python3 ~/.claude/voice-notify/generate_cache.py --character 派蒙
+  ```
 
-编辑 `voices.json` 的 `local` 段：
+  `characters.json` 内置 13 个角色的台词（派蒙 / 迪卢克 / 钟离 / 神子 / 曹操 / 长离 / 姬子 / 蜡笔小新 / 派大星 / 奶龙 / 绿茶 / 丁真 / 黑手）。它只是一份台词库，**不包含任何 model_id**，你需要自己去 Fish Audio 找对应角色的 model_id 填到 `voices.json`。
+
+---
+
+## 配置细节
+
+### 本地模式：自定义声音和话术
+
+编辑 `~/.claude/voice-notify/voices.json` 的 `local` 段：
+
 ```json
 {
   "local": {
@@ -103,57 +118,94 @@ python3 ~/.claude/voice-notify/generate_cache.py --character 派蒙
 }
 ```
 
-macOS 常用中文声音：`Tingting`（中文女声）、`Sinji`（粤语）、`Meijia`（台湾腔）。
-查看全部可用声音：`say -v '?'`。
+**macOS 中文声音**：`Tingting`（大陆中文女声）、`Sinji`（粤语）、`Meijia`（台湾中文）。
+查看系统可用所有声音：`say -v '?'`。
 
-### 查看当前模式
-
-```bash
-python3 ~/.claude/voice-notify/voice_mode.py
-```
+**Linux**：`voice` 字段设为 `zh`（espeak 中文），或 `auto` 用系统默认。
 
 ### 临时静音
+
 ```bash
-touch ~/.claude/voice-notify/.voice_mute     # 静音
-rm ~/.claude/voice-notify/.voice_mute        # 取消静音
+touch ~/.claude/voice-notify/.voice_mute   # 静音
+rm ~/.claude/voice-notify/.voice_mute      # 取消
 ```
+
+### 切换模式
+
+```bash
+python3 ~/.claude/voice-notify/voice_mode.py local       # 切回本地
+python3 ~/.claude/voice-notify/voice_mode.py fish        # Fish Audio
+python3 ~/.claude/voice-notify/voice_mode.py             # 查看当前
+```
+
+> 如果切到 `fish` 时 `voices.json` 里还没配角色或没填 `FISH_API_KEY`，voice-notify 会自动回落到本地 TTS，保证你始终能听到提示音。
+
+---
 
 ## 系统要求
 
 - Python 3.9+
-- macOS 或 Linux
-  - macOS: 自带 `say`（零依赖）
-  - Linux: 需要 `speech-dispatcher` 或 `espeak`
-- curl（仅 Fish Audio 模式需要）
+- macOS（自带 `say`）或 Linux（需装 `speech-dispatcher` 或 `espeak`）
+- `curl`（仅 Fish Audio 模式需要）
+- 不需要 `pip install`，零 Python 第三方依赖
 
-## FAQ
+Linux 安装 TTS：
 
-**Q: 真的完全不用 API key 就能用吗？**
+```bash
+sudo apt install speech-dispatcher   # 推荐，支持中文
+# 或
+sudo apt install espeak
+```
 
-是的。默认 local 模式用系统 TTS，macOS 自带，Linux 装个 espeak 就行。
+---
 
-**Q: Fish Audio 免费吗？**
+## 工作原理
 
-Fish Audio 新账号送一些额度。重度使用按字符数收费。
+```
+Claude Code 事件触发
+  │
+  ├─ Stop（任务结束）──→ voice_notify.py
+  │                        ├─ backend=local  → say/espeak 说固定话术（或 LLM 总结）
+  │                        └─ backend=fish   → LLM 总结 + Fish TTS / 或播放缓存
+  │
+  └─ Notification（权限请求）──→ voice_permission.py
+                                 ├─ backend=local → say/espeak
+                                 └─ backend=fish  → 播放缓存的角色提示音
+```
 
-**Q: 能用 OpenAI 替代 DeepSeek 做总结吗？**
-
-可以。在 `.env` 中设置 `LLM_API_URL`、`LLM_API_KEY`、`LLM_MODEL`，支持任何 OpenAI 兼容接口。
-
-**Q: 本地模式也能用 LLM 总结吗？**
-
-可以。如果 `.env` 里配置了 `DEEPSEEK_API_KEY` 或 `LLM_API_KEY`，local 模式会把静态文本替换成对 Claude 最后一轮对话的一句话总结，然后用系统 TTS 读出来。
-
-**Q: 为什么 Claude Code hook 要手动加？**
-
-自动修改 settings.json 风险太大（可能破坏已有配置）。手动粘贴几行 JSON 更安全。
+---
 
 ## 卸载
 
 ```bash
-chmod +x uninstall.sh && ./uninstall.sh
-# 然后在 Claude Code 中移除 hooks
+./uninstall.sh
 ```
+
+然后在 `~/.claude/settings.json` 里删除对应的 hooks。
+
+---
+
+## FAQ
+
+**Q: 默认模式真的不用任何 API Key？**
+对。macOS 的 `say` 和 Linux 的 `espeak` 都是系统自带 / 免费的。
+
+**Q: Fish Audio 收费吗？**
+注册送免费额度，重度使用按字符数付费，详见 fish.audio 定价。
+
+**Q: `characters.json` 里 13 个角色的 model_id 呢？**
+仓库里不分发 model_id —— 请自己去 https://fish.audio/discovery/ 搜索对应角色名，复制 ID 粘到 `voices.json`。
+
+**Q: 能用 OpenAI 代替 DeepSeek 吗？**
+可以。在 `.env` 里设置 `LLM_API_URL` / `LLM_API_KEY` / `LLM_MODEL`，支持任何 OpenAI 兼容 API。
+
+**Q: 为什么 Hook 要手动加到 `settings.json`？**
+自动改 JSON 容易破坏你已有的配置。手动粘贴更安全。
+
+**Q: Windows 支持吗？**
+v1 只支持 macOS 和 Linux。欢迎 PR。
+
+---
 
 ## License
 

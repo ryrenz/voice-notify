@@ -106,8 +106,11 @@ def main():
 
     voices = load_voice_map()
     if not voices:
-        print("Error: no voices configured. Copy voices.example.json to voices.json "
-              "and add your voice model IDs.", file=sys.stderr)
+        print(
+            "No voices configured. Add at least one voice to "
+            "~/.claude/voice-notify/voices.json (see README -> Fish Audio Setup).",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
     # Filter characters
