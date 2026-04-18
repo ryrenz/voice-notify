@@ -27,13 +27,13 @@ Then paste this into `~/.claude/settings.json` at the top level (merge with your
 
 **Done!** Claude Code will now say "task done" on completion and "needs your confirmation" on permission requests, using macOS `say` / Linux `espeak`.
 
-Want more expressive voices (Perky Girl, Mature Female, Alpha Male, etc.)? See [Fish Audio upgrade](#upgrade-fish-audio-character-voices) below.
+Want more expressive voices (Sweet Schemer, Mature Female, Young Boy)? See [Fish Audio upgrade](#upgrade-fish-audio-character-voices) below.
 
 ---
 
 ## Upgrade: Fish Audio character voices
 
-System TTS sounds robotic? Upgrade to Fish Audio and pick from **13 built-in voice profiles**: Perky Girl (萝莉音), Mature Female (御姐音), Young Boy (正太音), Alpha Male (霸总音), Sweet Schemer (绿茶音), Streetwise (社会人音), and more.
+System TTS sounds robotic? Upgrade to Fish Audio and pick from **3 built-in voice profiles**: Sweet Schemer (绿茶音), Mature Female (御姐音), Young Boy (正太音). Want more? Just add your own.
 
 ### 1. Register a Fish Audio account
 
@@ -45,7 +45,7 @@ Sign up at https://fish.audio.
 
 Go to https://fish.audio/discovery/ and search by voice type:
 
-- Search by keyword, e.g. "萝莉" (perky girl), "御姐" (mature female), "正太" (young boy), "霸总" (alpha male)
+- Search by keyword, e.g. "绿茶" (sweet schemer), "御姐" (mature female), "正太" (young boy)
 - Open the model page
 - The last path segment of the URL is the `model_id`
   - Example: `https://fish.audio/m/eacc56f8ab48443fa84421c547d3b60e/` → `eacc56f8ab48443fa84421c547d3b60e`
@@ -65,10 +65,10 @@ FISH_API_KEY=the_key_you_copied_from_fish_audio
 {
   "backend": "fish",
   "fish": {
-    "current": "萝莉音",
+    "current": "绿茶音",
     "voices": {
-      "萝莉音": {
-        "name": "萝莉音",
+      "绿茶音": {
+        "name": "绿茶音",
         "model_id": "the_model_id_you_copied"
       }
     }
@@ -82,7 +82,7 @@ FISH_API_KEY=the_key_you_copied_from_fish_audio
 python3 ~/.claude/voice-notify/voice_mode.py fish
 ```
 
-Done. Claude Code will now announce completions in the Perky Girl (萝莉音) voice.
+Done. Claude Code will now announce completions in the Sweet Schemer (绿茶音) voice.
 
 ### 4. Two Fish Audio sub-modes
 
@@ -95,15 +95,12 @@ python3 ~/.claude/voice-notify/voice_mode.py fish cache  # Cache: pick a random 
 - **cache mode** takes its lines from `characters.json`. Generate the cache first:
 
   ```bash
-  python3 ~/.claude/voice-notify/generate_cache.py --character 萝莉音
+  python3 ~/.claude/voice-notify/generate_cache.py --character 绿茶音
   ```
 
-  `characters.json` ships with 13 voice-type templates, each with 10 representative lines:
-  Perky Girl (萝莉音) / Mature Female (御姐音) / Young Boy (正太音) / Alpha Male (霸总音) /
-  Cold Male (冷酷男声) / Classical Male (古风男声) / Gentle Sister (温柔姐姐音) /
-  Intellectual Sister (知性姐姐音) / Derp (呆萌音) / Cute Baby (萌宝音) /
-  Sweet Schemer (绿茶音) / Teen Boy (少年音) / Streetwise (社会人音).
-  It is a lines library only — it does **not** contain any model IDs. You still need to pick a matching model on Fish Audio and put its ID into `voices.json`.
+  `characters.json` ships with 3 voice-type templates, each with 10 representative lines:
+  Sweet Schemer (绿茶音) / Mature Female (御姐音) / Young Boy (正太音).
+  It is a lines library only — it does **not** contain any model IDs. You still need to pick a matching model on Fish Audio and put its ID into `voices.json`. Want more profiles? Just append your own to `characters.json` following the same format.
 
 ---
 
@@ -198,8 +195,12 @@ Yes. `say` on macOS and `espeak` on Linux are free system utilities.
 **Q: Is Fish Audio free?**
 New accounts get free credits; heavy use is billed per character. See fish.audio pricing.
 
-**Q: Where are the model IDs for the 13 voice profiles in `characters.json`?**
-We don't distribute model IDs in the repo. Pick a matching voice at https://fish.audio/discovery/ by searching the voice-type keyword (萝莉/御姐/正太/霸总 etc.) and paste the ID into `voices.json` yourself.
+**Q: Where are the model IDs for the 3 voice profiles in `characters.json`?**
+We don't distribute model IDs in the repo. Pick a matching voice at https://fish.audio/discovery/ by searching the voice-type keyword (绿茶/御姐/正太) and paste the ID into `voices.json` yourself.
+
+**Q: Only 3 voice templates?**
+
+Yes. We ship just Sweet Schemer (绿茶音), Mature Female (御姐音), and Young Boy (正太音) as defaults for cache mode. Want more? Append your own entries to `~/.claude/voice-notify/characters.json` using the same format as the existing three.
 
 **Q: Can I use OpenAI instead of DeepSeek?**
 Yes. Set `LLM_API_URL` / `LLM_API_KEY` / `LLM_MODEL` in `.env`. Any OpenAI-compatible endpoint works.

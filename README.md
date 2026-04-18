@@ -33,7 +33,7 @@ cd voice-notify
 
 ## 升级：Fish Audio 角色语音
 
-系统 TTS 声音太呆板？升级到 Fish Audio，**内置 13 种声线**（萝莉音 / 御姐音 / 正太音 / 霸总音 / 绿茶音 / 社会人音 等），想要哪种就挑哪种。
+系统 TTS 声音太呆板？升级到 Fish Audio，**内置 3 种声线**（绿茶音 / 御姐音 / 正太音），想要更多自己加就行。
 
 ### 1. 注册 Fish Audio 账号
 
@@ -65,10 +65,10 @@ FISH_API_KEY=你从 Fish Audio 复制的 key
 {
   "backend": "fish",
   "fish": {
-    "current": "萝莉音",
+    "current": "绿茶音",
     "voices": {
-      "萝莉音": {
-        "name": "萝莉音",
+      "绿茶音": {
+        "name": "绿茶音",
         "model_id": "从 Fish Audio 复制的 model_id"
       }
     }
@@ -82,7 +82,7 @@ FISH_API_KEY=你从 Fish Audio 复制的 key
 python3 ~/.claude/voice-notify/voice_mode.py fish
 ```
 
-搞定！下次 Claude Code 完成任务就是萝莉音的声音了。
+搞定！下次 Claude Code 完成任务就是绿茶音的声音了。
 
 ### 4. Fish Audio 两种子模式
 
@@ -95,10 +95,10 @@ python3 ~/.claude/voice-notify/voice_mode.py fish cache  # 缓存模式：预生
 - **cache 模式**台词来自 `characters.json`，先生成缓存：
 
   ```bash
-  python3 ~/.claude/voice-notify/generate_cache.py --character 萝莉音
+  python3 ~/.claude/voice-notify/generate_cache.py --character 绿茶音
   ```
 
-  `characters.json` 内置 13 种声线模板（萝莉音 / 御姐音 / 正太音 / 霸总音 / 冷酷男声 / 古风男声 / 温柔姐姐音 / 知性姐姐音 / 呆萌音 / 萌宝音 / 绿茶音 / 少年音 / 社会人音），每种配了 10 条代表性台词。它只是一份台词库，**不包含任何 model_id**，你需要自己去 Fish Audio 找符合该声线的模型，把 `model_id` 填到 `voices.json`。
+  `characters.json` 内置 3 种声线模板（绿茶音 / 御姐音 / 正太音），每种配了 10 条代表性台词。它只是一份台词库，**不包含任何 model_id**，你需要自己去 Fish Audio 找符合该声线的模型，把 `model_id` 填到 `voices.json`。想要更多声线，直接照着格式往 `characters.json` 加即可。
 
 ---
 
@@ -193,8 +193,12 @@ Claude Code 事件触发
 **Q: Fish Audio 收费吗？**
 注册送免费额度，重度使用按字符数付费，详见 fish.audio 定价。
 
-**Q: `characters.json` 里 13 种声线的 model_id 呢？**
+**Q: `characters.json` 里 3 种声线的 model_id 呢？**
 仓库里不分发 model_id —— 请自己去 https://fish.audio/discovery/ 按声线类型挑一个顺耳的模型，复制 ID 粘到 `voices.json`。
+
+**Q: 只有 3 个声线模板？**
+
+对。默认只保留绿茶音、御姐音、正太音三个台词模板（Cache 模式用）。想要更多，自己往 `~/.claude/voice-notify/characters.json` 加就行，格式参考现有的三个。
 
 **Q: 能用 OpenAI 代替 DeepSeek 吗？**
 可以。在 `.env` 里设置 `LLM_API_URL` / `LLM_API_KEY` / `LLM_MODEL`，支持任何 OpenAI 兼容 API。
