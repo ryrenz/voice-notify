@@ -20,9 +20,34 @@ echo "========================"
 echo ""
 
 # 1. Check Python version
+print_python_install_help() {
+    echo "" >&2
+    echo "Install instructions:" >&2
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        echo "  macOS (this machine):" >&2
+        echo "    brew install python@3.12" >&2
+        echo "    or https://www.python.org/downloads/" >&2
+    elif [[ "$OSTYPE" == "linux"* ]]; then
+        echo "  Linux (this machine), pick the one matching your distro:" >&2
+        echo "    Ubuntu/Debian: sudo apt install python3" >&2
+        echo "    Fedora/RHEL:   sudo dnf install python3" >&2
+        echo "    Arch:          sudo pacman -S python" >&2
+    else
+        echo "  macOS:         brew install python@3.12" >&2
+        echo "                 or https://www.python.org/downloads/" >&2
+        echo "  Ubuntu/Debian: sudo apt install python3" >&2
+        echo "  Fedora/RHEL:   sudo dnf install python3" >&2
+        echo "  Arch:          sudo pacman -S python" >&2
+    fi
+    echo "" >&2
+    echo "Or if you just want the basic voice notifications (no Python required)," >&2
+    echo "see the \"5-second zero-dependency version\" in README.md." >&2
+}
+
 PYTHON="python3"
 if ! command -v "$PYTHON" &> /dev/null; then
-    echo "Error: python3 not found. Please install Python 3.9+." >&2
+    echo "Error: Python 3.9+ is required." >&2
+    print_python_install_help
     exit 1
 fi
 
@@ -31,7 +56,8 @@ PY_MAJOR=$($PYTHON -c "import sys; print(sys.version_info.major)")
 PY_MINOR=$($PYTHON -c "import sys; print(sys.version_info.minor)")
 
 if [ "$PY_MAJOR" -lt 3 ] || ([ "$PY_MAJOR" -eq 3 ] && [ "$PY_MINOR" -lt 9 ]); then
-    echo "Error: Python 3.9+ required, found $PY_VERSION" >&2
+    echo "Error: Python 3.9+ is required, found $PY_VERSION." >&2
+    print_python_install_help
     exit 1
 fi
 echo -e "${GREEN}✓${NC} Python $PY_VERSION"

@@ -1,8 +1,69 @@
 # voice-notify
 
-Voice notifications for Claude Code — announces task completion and permission requests. Default mode uses system TTS, **no API key required**.
+Voice notifications for Claude Code — announces task completion and permission requests.
 
-## Quick start (30 seconds, zero config)
+Two tracks: **5-second zero-dependency version** (what most people want), **Full version** (for character voices or LLM summary).
+
+---
+
+## 🥇 5-second zero-dependency version
+
+No clone, no install — just paste this into `~/.claude/settings.json`:
+
+**macOS**:
+```json
+{
+  "hooks": {
+    "Stop": [{"hooks": [{"type": "command", "command": "say 'Task complete'"}]}],
+    "Notification": [{"hooks": [{"type": "command", "command": "say 'Needs approval'"}]}]
+  }
+}
+```
+
+**Linux** (with `speech-dispatcher` or `espeak` installed):
+```json
+{
+  "hooks": {
+    "Stop": [{"hooks": [{"type": "command", "command": "spd-say 'Task complete'"}]}],
+    "Notification": [{"hooks": [{"type": "command", "command": "spd-say 'Needs approval'"}]}]
+  }
+}
+```
+
+Done. Claude Code will now announce task completions and permission requests through your system TTS.
+
+**Prefer Chinese?** Replace `'Task complete'` with `'任务完成'` and `'Needs approval'` with `'需要确认'`.
+
+**Want a different voice?** On macOS add `-v`: `say -v Samantha 'Task complete'`. List all voices: `say -v '?'`.
+
+**Want more?** For character voices or LLM summaries of what Claude just did, see the Full version below.
+
+---
+
+## 🥈 Full version (character voices / LLM summary)
+
+Want anime-style character voices (Sweet Schemer, Mature Female, Young Boy)? Want Claude Code to **summarize what it just did** in a character voice? Take this path.
+
+### Prerequisite: Python 3.9+
+
+```bash
+# macOS
+brew install python@3.12
+# or download from https://www.python.org/downloads/
+
+# Ubuntu / Debian (usually pre-installed)
+sudo apt install python3
+
+# Fedora / RHEL
+sudo dnf install python3
+
+# Arch
+sudo pacman -S python
+```
+
+Verify: `python3 --version` should show 3.9+.
+
+### Install
 
 ```bash
 git clone https://github.com/ryrenz/voice-notify.git
@@ -10,38 +71,21 @@ cd voice-notify
 ./install.sh
 ```
 
-Then paste this into `~/.claude/settings.json` at the top level (merge with your existing `hooks`, or create a new block):
+Then paste the JSON that `install.sh` prints into `~/.claude/settings.json`.
 
-```json
-{
-  "hooks": {
-    "Stop": [
-      {"hooks": [{"type": "command", "command": "python3 ~/.claude/voice-notify/voice_notify.py"}]}
-    ],
-    "Notification": [
-      {"hooks": [{"type": "command", "command": "python3 ~/.claude/voice-notify/voice_permission.py"}]}
-    ]
-  }
-}
-```
+After installation the default backend is still local TTS (equivalent to the zero-dependency version), but now with configurable options (custom phrases, voice switching, etc.).
 
-**Done!** Claude Code will now say "task done" on completion and "needs your confirmation" on permission requests, using macOS `say` / Linux `espeak`.
-
-Want more expressive voices (Sweet Schemer, Mature Female, Young Boy)? See [Fish Audio upgrade](#upgrade-fish-audio-character-voices) below.
-
----
-
-## Upgrade: Fish Audio character voices
+### Upgrade to Fish Audio character voices
 
 System TTS sounds robotic? Upgrade to Fish Audio and pick from **3 built-in voice profiles**: Sweet Schemer (绿茶音), Mature Female (御姐音), Young Boy (正太音). Want more? Just add your own.
 
-### 1. Register a Fish Audio account
+#### 1. Register a Fish Audio account
 
 Sign up at https://fish.audio.
 
 **Get an API key**: after login → avatar (top right) → API Keys → Create → copy and save.
 
-### 2. Find the voice model IDs you want
+#### 2. Find the voice model IDs you want
 
 Go to https://fish.audio/discovery/ and search by voice type:
 
@@ -51,7 +95,7 @@ Go to https://fish.audio/discovery/ and search by voice type:
   - Example: `https://fish.audio/m/eacc56f8ab48443fa84421c547d3b60e/` → `eacc56f8ab48443fa84421c547d3b60e`
 - Preview the voice, and if you like it, copy the `model_id`
 
-### 3. Configure
+#### 3. Configure
 
 **Set the API key** — edit `~/.claude/voice-notify/.env`:
 
@@ -84,7 +128,7 @@ python3 ~/.claude/voice-notify/voice_mode.py fish
 
 Done. Claude Code will now announce completions in the Sweet Schemer (绿茶音) voice.
 
-### 4. Two Fish Audio sub-modes
+#### 4. Two Fish Audio sub-modes
 
 ```bash
 python3 ~/.claude/voice-notify/voice_mode.py fish api    # Real-time: LLM summarizes what Claude did -> Fish TTS speaks it
@@ -146,10 +190,11 @@ python3 ~/.claude/voice-notify/voice_mode.py             # show current
 
 ## Requirements
 
-- Python 3.9+
-- macOS (ships with `say`) or Linux (install `speech-dispatcher` or `espeak`)
-- `curl` (only needed for Fish Audio mode)
-- No `pip install` needed — zero third-party Python dependencies
+| Track | Dependencies |
+|-------|--------------|
+| Zero-dependency version | macOS (ships with `say`) or Linux (`spd-say` / `espeak`) |
+| Full version | Above + Python 3.9+ |
+| Fish Audio character voices | Full version + `curl` + Fish Audio API key |
 
 Linux TTS install:
 
@@ -158,6 +203,8 @@ sudo apt install speech-dispatcher   # recommended, supports Chinese
 # or
 sudo apt install espeak
 ```
+
+The full version has zero third-party Python dependencies — no `pip install` needed.
 
 ---
 

@@ -1,8 +1,69 @@
 # voice-notify
 
-让 Claude Code 用语音播报任务完成和权限请求。默认使用系统自带 TTS，**开箱即用，不需要任何 API Key**。
+让 Claude Code 用语音播报任务完成和权限请求。
 
-## 快速开始（30 秒零配置）
+分两档：**零依赖 5 秒版**（大多数人用这个）、**完整版**（想要角色语音或 LLM 总结用这个）。
+
+---
+
+## 🥇 零依赖 5 秒版
+
+不用 clone、不用装任何东西，直接把下面这段粘到 `~/.claude/settings.json`：
+
+**macOS**：
+```json
+{
+  "hooks": {
+    "Stop": [{"hooks": [{"type": "command", "command": "say '任务完成'"}]}],
+    "Notification": [{"hooks": [{"type": "command", "command": "say '需要确认'"}]}]
+  }
+}
+```
+
+**Linux**（装了 `speech-dispatcher` 或 `espeak` 的）：
+```json
+{
+  "hooks": {
+    "Stop": [{"hooks": [{"type": "command", "command": "spd-say '任务完成'"}]}],
+    "Notification": [{"hooks": [{"type": "command", "command": "spd-say '需要确认'"}]}]
+  }
+}
+```
+
+完成。Claude Code 每次完成任务和请求权限时会用系统自带 TTS 播报。
+
+**想要英文？** 把 `'任务完成'` 改成 `'Task complete'`，`'需要确认'` 改成 `'Needs approval'`。
+
+**想换声音？** macOS 可以加 `-v`：`say -v Tingting '任务完成'`（中文女声）。查看所有声音：`say -v '?'`。
+
+**想要更多？** 需要角色语音、LLM 总结刚做了什么这类功能，往下看「完整版」。
+
+---
+
+## 🥈 完整版（角色语音 / LLM 总结）
+
+想要派蒙、御姐、霸总这种二次元角色声音？想让 Claude Code 用角色声音**总结刚刚做了什么**？走这条路。
+
+### 前置：装 Python 3.9+
+
+```bash
+# macOS
+brew install python@3.12
+# 或去 https://www.python.org/downloads/ 下载安装包
+
+# Ubuntu / Debian（通常默认就有）
+sudo apt install python3
+
+# Fedora / RHEL
+sudo dnf install python3
+
+# Arch
+sudo pacman -S python
+```
+
+验证：`python3 --version` 显示 3.9+ 即可。
+
+### 安装
 
 ```bash
 git clone https://github.com/ryrenz/voice-notify.git
@@ -10,48 +71,31 @@ cd voice-notify
 ./install.sh
 ```
 
-然后把下面这段加到 `~/.claude/settings.json` 的顶层（和现有 `hooks` 合并，或新建）：
+然后把 install.sh 输出的 JSON 粘到 `~/.claude/settings.json`。
 
-```json
-{
-  "hooks": {
-    "Stop": [
-      {"hooks": [{"type": "command", "command": "python3 ~/.claude/voice-notify/voice_notify.py"}]}
-    ],
-    "Notification": [
-      {"hooks": [{"type": "command", "command": "python3 ~/.claude/voice-notify/voice_permission.py"}]}
-    ]
-  }
-}
-```
+默认装完也是本地 TTS 模式（等价于零依赖版），但多了几个可配置选项（自定义话术、切换声音等）。
 
-**完成！** 现在 Claude Code 每次完成任务会说“任务完成”，请求权限会说“需要你的确认”，用 macOS `say` / Linux `espeak` 的系统声音。
-
-想换成更有特色的角色声线（御姐、正太、霸总等），看下面 [Fish Audio 升级](#升级fish-audio-角色语音)。
-
----
-
-## 升级：Fish Audio 角色语音
+### 升级到 Fish Audio 角色语音
 
 系统 TTS 声音太呆板？升级到 Fish Audio，**内置 3 种声线**（绿茶音 / 御姐音 / 正太音），想要更多自己加就行。
 
-### 1. 注册 Fish Audio 账号
+#### 1. 注册 Fish Audio 账号
 
 前往 https://fish.audio 注册账号。
 
 **获取 API Key**：登录后 → 右上角头像 → API Keys → Create → 复制保存。
 
-### 2. 找到你想要的声线 Model ID
+#### 2. 找到你想要的声线 Model ID
 
 前往 https://fish.audio/discovery/ 搜索符合你想要声线的模型：
 
-- 按声线类型搜索，例如“萝莉”、“御姐”、“正太”、“霸总”等
+- 按声线类型搜索，例如"萝莉"、"御姐"、"正太"、"霸总"等
 - 点进模型详情页
 - URL 里最后一段就是 `model_id`
   - 例：`https://fish.audio/m/eacc56f8ab48443fa84421c547d3b60e/` → `eacc56f8ab48443fa84421c547d3b60e`
 - 点试听，满意就复制 `model_id`
 
-### 3. 配置
+#### 3. 配置
 
 **填 API Key** —— 编辑 `~/.claude/voice-notify/.env`：
 
@@ -84,7 +128,7 @@ python3 ~/.claude/voice-notify/voice_mode.py fish
 
 搞定！下次 Claude Code 完成任务就是绿茶音的声音了。
 
-### 4. Fish Audio 两种子模式
+#### 4. Fish Audio 两种子模式
 
 ```bash
 python3 ~/.claude/voice-notify/voice_mode.py fish api    # 实时模式：LLM 总结刚做了什么 → Fish TTS 念出来
@@ -144,10 +188,11 @@ python3 ~/.claude/voice-notify/voice_mode.py             # 查看当前
 
 ## 系统要求
 
-- Python 3.9+
-- macOS（自带 `say`）或 Linux（需装 `speech-dispatcher` 或 `espeak`）
-- `curl`（仅 Fish Audio 模式需要）
-- 不需要 `pip install`，零 Python 第三方依赖
+| 路径 | 依赖 |
+|------|------|
+| 零依赖版 | macOS（自带 `say`）或 Linux（`spd-say` / `espeak`） |
+| 完整版 | 上面 + Python 3.9+ |
+| Fish Audio 角色语音 | 完整版 + `curl` + Fish Audio API key |
 
 Linux 安装 TTS：
 
@@ -156,6 +201,8 @@ sudo apt install speech-dispatcher   # 推荐，支持中文
 # 或
 sudo apt install espeak
 ```
+
+完整版零 Python 第三方依赖，不需要 `pip install`。
 
 ---
 
