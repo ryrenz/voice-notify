@@ -25,7 +25,7 @@ print_python_install_help() {
     echo "Install instructions:" >&2
     if [[ "$OSTYPE" == "darwin"* ]]; then
         echo "  macOS (this machine):" >&2
-        echo "    brew install python@3.12" >&2
+        echo "    brew install python3" >&2
         echo "    or https://www.python.org/downloads/" >&2
     elif [[ "$OSTYPE" == "linux"* ]]; then
         echo "  Linux (this machine), pick the one matching your distro:" >&2
@@ -33,7 +33,7 @@ print_python_install_help() {
         echo "    Fedora/RHEL:   sudo dnf install python3" >&2
         echo "    Arch:          sudo pacman -S python" >&2
     else
-        echo "  macOS:         brew install python@3.12" >&2
+        echo "  macOS:         brew install python3" >&2
         echo "                 or https://www.python.org/downloads/" >&2
         echo "  Ubuntu/Debian: sudo apt install python3" >&2
         echo "  Fedora/RHEL:   sudo dnf install python3" >&2

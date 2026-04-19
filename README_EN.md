@@ -8,26 +8,25 @@ Two tracks: **5-second zero-dependency version** (what most people want), **Full
 
 ## 🥇 5-second zero-dependency version
 
-No clone, no install — just paste this into `~/.claude/settings.json`:
+No clone, no install — just merge the **hook fragment** below into `~/.claude/settings.json`:
+
+- If your `settings.json` doesn't have a `"hooks"` field yet: add the whole `"hooks": { ... }` block to the top-level object.
+- If you already have `"hooks"`: merge the `Stop` and `Notification` entries into it.
 
 **macOS**:
 ```json
-{
   "hooks": {
     "Stop": [{"hooks": [{"type": "command", "command": "say 'Task complete'"}]}],
     "Notification": [{"hooks": [{"type": "command", "command": "say 'Needs approval'"}]}]
   }
-}
 ```
 
-**Linux** (with `speech-dispatcher` or `espeak` installed):
+**Linux** (install TTS first: `sudo apt install speech-dispatcher`):
 ```json
-{
   "hooks": {
     "Stop": [{"hooks": [{"type": "command", "command": "spd-say 'Task complete'"}]}],
     "Notification": [{"hooks": [{"type": "command", "command": "spd-say 'Needs approval'"}]}]
   }
-}
 ```
 
 Done. Claude Code will now announce task completions and permission requests through your system TTS.
@@ -37,6 +36,8 @@ Done. Claude Code will now announce task completions and permission requests thr
 **Want a different voice?** On macOS add `-v`: `say -v Samantha 'Task complete'`. List all voices: `say -v '?'`.
 
 **Want more?** For character voices or LLM summaries of what Claude just did, see the Full version below.
+
+**Want to uninstall?** Just remove the `Stop` and `Notification` hook entries you added to `~/.claude/settings.json`.
 
 ---
 
@@ -48,7 +49,7 @@ Want anime-style character voices (Sweet Schemer, Mature Female, Young Boy)? Wan
 
 ```bash
 # macOS
-brew install python@3.12
+brew install python3
 # or download from https://www.python.org/downloads/
 
 # Ubuntu / Debian (usually pre-installed)
@@ -77,7 +78,7 @@ After installation the default backend is still local TTS (equivalent to the zer
 
 ### Upgrade to Fish Audio character voices
 
-System TTS sounds robotic? Upgrade to Fish Audio and pick from **3 built-in voice profiles**: Sweet Schemer (绿茶音), Mature Female (御姐音), Young Boy (正太音). Want more? Just add your own.
+System TTS sounds too robotic? Upgrade to Fish Audio for real character voices. The repo ships with **line templates** for 3 voice types (Sweet Schemer / Mature Female / Young Boy, used by Cache mode); **you pick the actual voice models from Fish Audio yourself** (see Step 2 below).
 
 #### 1. Register a Fish Audio account
 
@@ -141,6 +142,8 @@ python3 ~/.claude/voice-notify/voice_mode.py fish cache  # Cache: pick a random 
   ```bash
   python3 ~/.claude/voice-notify/generate_cache.py --character 绿茶音
   ```
+
+  > ⚠️ Generating cache makes 10 Fish Audio API calls per character (one per line) and will consume your API quota.
 
   `characters.json` ships with 3 voice-type templates, each with 10 representative lines:
   Sweet Schemer (绿茶音) / Mature Female (御姐音) / Young Boy (正太音).

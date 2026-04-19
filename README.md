@@ -8,26 +8,25 @@
 
 ## 🥇 零依赖 5 秒版
 
-不用 clone、不用装任何东西，直接把下面这段粘到 `~/.claude/settings.json`：
+不用 clone、不用装任何东西，只需把下面这段 **hook 片段** 合并到 `~/.claude/settings.json` 里：
+
+- 如果你的 `settings.json` 还没有 `"hooks"` 字段：把整段 `"hooks": { ... }` 加到顶层对象里
+- 如果已经有 `"hooks"`：把 `Stop` 和 `Notification` 两项合并进去
 
 **macOS**：
 ```json
-{
   "hooks": {
     "Stop": [{"hooks": [{"type": "command", "command": "say '任务完成'"}]}],
     "Notification": [{"hooks": [{"type": "command", "command": "say '需要确认'"}]}]
   }
-}
 ```
 
-**Linux**（装了 `speech-dispatcher` 或 `espeak` 的）：
+**Linux**（需要先装 TTS：`sudo apt install speech-dispatcher`）：
 ```json
-{
   "hooks": {
     "Stop": [{"hooks": [{"type": "command", "command": "spd-say '任务完成'"}]}],
     "Notification": [{"hooks": [{"type": "command", "command": "spd-say '需要确认'"}]}]
   }
-}
 ```
 
 完成。Claude Code 每次完成任务和请求权限时会用系统自带 TTS 播报。
@@ -37,6 +36,8 @@
 **想换声音？** macOS 可以加 `-v`：`say -v Tingting '任务完成'`（中文女声）。查看所有声音：`say -v '?'`。
 
 **想要更多？** 需要角色语音、LLM 总结刚做了什么这类功能，往下看「完整版」。
+
+**想卸载？** 删掉 `~/.claude/settings.json` 里上面加的那段 `Stop` 和 `Notification` hook 就行。
 
 ---
 
@@ -48,7 +49,7 @@
 
 ```bash
 # macOS
-brew install python@3.12
+brew install python3
 # 或去 https://www.python.org/downloads/ 下载安装包
 
 # Ubuntu / Debian（通常默认就有）
@@ -77,7 +78,7 @@ cd voice-notify
 
 ### 升级到 Fish Audio 角色语音
 
-系统 TTS 声音太呆板？升级到 Fish Audio，**内置 3 种声线**（绿茶音 / 御姐音 / 正太音），想要更多自己加就行。
+系统 TTS 声音太呆板？升级到 Fish Audio，用真正的角色声音播报。仓库自带 3 种声线的**台词模板**（绿茶音 / 御姐音 / 正太音，用于 Cache 模式），**具体的声音模型需要你从 Fish Audio 自己挑**（下面第 2 步讲）。
 
 #### 1. 注册 Fish Audio 账号
 
@@ -141,6 +142,8 @@ python3 ~/.claude/voice-notify/voice_mode.py fish cache  # 缓存模式：预生
   ```bash
   python3 ~/.claude/voice-notify/generate_cache.py --character 绿茶音
   ```
+
+  > ⚠️ 生成缓存会调用 Fish Audio API 10 次（每个角色 10 条台词），会消耗你账号的额度。
 
   `characters.json` 内置 3 种声线模板（绿茶音 / 御姐音 / 正太音），每种配了 10 条代表性台词。它只是一份台词库，**不包含任何 model_id**，你需要自己去 Fish Audio 找符合该声线的模型，把 `model_id` 填到 `voices.json`。想要更多声线，直接照着格式往 `characters.json` 加即可。
 
