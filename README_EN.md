@@ -4,6 +4,8 @@ Voice notifications for Claude Code — announces task completion and permission
 
 Two tracks: **5-second zero-dependency version** (what most people want), **Full version** (for character voices or LLM summary).
 
+> Want an AI agent (Claude Code / Codex / etc.) to install the full version for you? Send it this repo link with your `FISH_API_KEY`, `DEEPSEEK_API_KEY`, and one or more `(character name, model_id)` pairs. It will follow [`AGENT_INSTALL.md`](./AGENT_INSTALL.md).
+
 ---
 
 ## 🥇 5-second zero-dependency version

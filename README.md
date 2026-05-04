@@ -4,6 +4,8 @@
 
 分两档：**零依赖 5 秒版**（大多数人用这个）、**完整版**（想要角色语音或 LLM 总结用这个）。
 
+> 想让 AI agent（Claude Code / Codex 等）帮你装完整版？把这个仓库链接发给它，并准备好 `FISH_API_KEY`、`DEEPSEEK_API_KEY`、若干 `(角色名, model_id)`。它会按 [`AGENT_INSTALL.md`](./AGENT_INSTALL.md) 装好。
+
 ---
 
 ## 🥇 零依赖 5 秒版
